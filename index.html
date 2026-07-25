@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Broadcast Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 550px;
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+        }
+
+        .header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .header p {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #cbd5e1;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 14px;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #f8fafc;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0284c7;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0369a1;
+        }
+
+        button:disabled {
+            background-color: #475569;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            text-align: center;
+            display: none;
+        }
+
+        .status.success {
+            display: block;
+            background-color: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status.error {
+            display: block;
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🚩 Broadcast Challenge CTF</h1>
+        <p>Kirim notifikasi challenge baru ke Discord via n8n</p>
+    </div>
+
+    <form id="broadcastForm">
+        <div class="form-group">
+            <label for="title">Judul Challenge / CTF</label>
+            <input type="text" id="title" placeholder="Contoh: PicoCTF 2026 - Web Exploitation" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Deskripsi Challenge</label>
+            <textarea id="description" placeholder="Jelaskan detail singkat challenge..." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="link">URL / Link Challenge</label>
+            <input type="url" id="link" placeholder="https://ctf.example.com/challenges/1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="channelId">Target Channel Discord</label>
+            <select id="channelId" required>
+                <!-- Ganti value dengan ID Channel Discord kamu -->
+                <option value="1530601520075243681"># testing-web</option>
+                <option value="ISI_CHANNEL_ID_LAIN_JIKA_ADA"># general</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="roleId">Role yang Di-tag</label>
+            <select id="roleId">
+                <option value="">-- Tanpa Tag --</option>
+                <!-- Ganti value dengan ID Role Discord yang tadi didapat -->
+                <option value="1399967831642345615">@adminkuma</option>
+                <option value="ISI_ROLE_ID_LAIN">@CTF Player</option>
+            </select>
+        </div>
+
+        <button type="submit" id="submitBtn">🚀 Send Broadcast</button>
+    </form>
+
+    <div id="statusMessage" class="status"></div>
+</div>
+
+<script>
+    // ⚠️ Ganti dengan Webhook URL dari n8n kamu!
+    const N8N_WEBHOOK_URL = 'https://n8n.afifrzn.my.id/webhook/broadcast-ctf';
+
+    const form = document.getElementById('broadcastForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMessage = document.getElementById('statusMessage');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Indikator Loading
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Mengirim...';
+        statusMessage.className = 'status';
+        statusMessage.style.display = 'none';
+
+        const payload = {
+            title: document.getElementById('title').value,
+            description: document.getElementById('description').value,
+            link: document.getElementById('link').value,
+            channel_id: document.getElementById('channelId').value,
+            role_id: document.getElementById('roleId').value
+        };
+
+        try {
+            const response = await fetch(N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                statusMessage.textContent = '✅ Broadcast berhasil terkirim ke Discord!';
+                statusMessage.classList.add('success');
+                form.reset();
+            } else {
+                throw new Error('Gagal mengirim ke n8n');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            statusMessage.textContent = '❌ Terjadi kesalahan saat mengirim broadcast.';
+            statusMessage.classList.add('error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🚀 Send Broadcast';
+        }
+    });
+</script>
+
+</body>
+</html>
