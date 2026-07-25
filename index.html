@@ -17,26 +17,81 @@
             color: #f8fafc;
             min-height: 100vh;
             padding: 40px 20px;
+            position: relative;
         }
 
-        .header {
+        /* Modal Login Overlay */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .login-card {
+            background: #1e293b;
+            padding: 35px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #334155;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             text-align: center;
-            margin-bottom: 40px;
+        }
+
+        .login-card h2 {
+            font-size: 1.5rem;
+            color: #38bdf8;
+            margin-bottom: 8px;
+        }
+
+        .login-card p {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-bottom: 24px;
+        }
+
+        /* Top Header Area */
+        .header-container {
+            max-width: 1100px;
+            margin: 0 auto 30px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .header h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
             color: #38bdf8;
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 10px;
         }
 
         .header p {
             color: #94a3b8;
-            margin-top: 8px;
+            font-size: 0.875rem;
+            margin-top: 4px;
         }
+
+        .btn-logout {
+            background-color: #334155;
+            color: #f8fafc;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-logout:hover { background-color: #475569; }
 
         /* Layout Grid Utama */
         .dashboard-container {
@@ -47,7 +102,7 @@
             gap: 30px;
         }
 
-        /* Styling Card */
+        /* Card Styling */
         .card {
             background: #1e293b;
             padding: 30px;
@@ -75,6 +130,7 @@
             font-weight: 600;
             margin-bottom: 8px;
             color: #cbd5e1;
+            text-align: left;
         }
 
         input, textarea, select {
@@ -167,20 +223,41 @@
         .status.success { display: block; background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
         .status.error { display: block; background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .dashboard-container { grid-template-columns: 1fr; }
+            .header-container { flex-direction: column; gap: 15px; text-align: center; }
             .form-row { flex-direction: column; gap: 0;}
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>🚩 CTF Broadcast Center</h1>
-        <p>Kirim notifikasi challenge baru ke Discord dengan mudah</p>
+    <!-- OVERLAY MODAL LOGIN -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-card">
+            <h2>🔒 Restricted Access</h2>
+            <p>Masukkan password admin untuk melanjutkan</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Password Admin</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required autofocus>
+                </div>
+                <button type="submit" class="btn-primary">Login ke Dashboard</button>
+                <div id="loginError" class="status error" style="margin-top: 15px;">Password Salah!</div>
+            </form>
+        </div>
     </div>
 
+    <!-- MAIN HEADER -->
+    <div class="header-container">
+        <div class="header">
+            <h1>🚩 CTF Broadcast Center</h1>
+            <p>Kirim notifikasi challenge baru ke Discord dengan mudah</p>
+        </div>
+        <button class="btn-logout" onclick="logout()">🔒 Logout Admin</button>
+    </div>
+
+    <!-- MAIN DASHBOARD CONTENT -->
     <div class="dashboard-container">
         <!-- Panel Kiri: Form Broadcast -->
         <div class="card">
@@ -203,16 +280,12 @@
 
                 <div class="form-group">
                     <label>Target Channel Discord</label>
-                    <select id="channelSelect" required>
-                        <!-- Akan diisi otomatis oleh JavaScript -->
-                    </select>
+                    <select id="channelSelect" required></select>
                 </div>
 
                 <div class="form-group">
                     <label>Role yang Di-tag</label>
-                    <select id="roleSelect">
-                        <!-- Akan diisi otomatis oleh JavaScript -->
-                    </select>
+                    <select id="roleSelect"></select>
                 </div>
 
                 <button type="submit" id="submitBtn" class="btn-primary">🚀 Kirim Broadcast Sekarang</button>
@@ -228,7 +301,7 @@
             <form id="addChannelForm" style="margin-bottom: 30px;">
                 <label>Tambah Channel Baru</label>
                 <div class="form-row">
-                    <div class="form-group"><input type="text" id="newChannelName" placeholder="Nama (ex: # general)" required></div>
+                    <div class="form-group"><input type="text" id="newChannelName" placeholder="Nama (# general)" required></div>
                     <div class="form-group"><input type="text" id="newChannelId" placeholder="Channel ID" required></div>
                 </div>
                 <button type="submit" class="btn-secondary">➕ Simpan Channel</button>
@@ -241,7 +314,7 @@
             <form id="addRoleForm">
                 <label>Tambah Role Baru</label>
                 <div class="form-row">
-                    <div class="form-group"><input type="text" id="newRoleName" placeholder="Nama (ex: @CTF Player)" required></div>
+                    <div class="form-group"><input type="text" id="newRoleName" placeholder="Nama (@CTF Player)" required></div>
                     <div class="form-group"><input type="text" id="newRoleId" placeholder="Role ID" required></div>
                 </div>
                 <button type="submit" class="btn-secondary">➕ Simpan Role</button>
@@ -251,10 +324,44 @@
     </div>
 
 <script>
+    // ⚙️ --- KONFIGURASI ADMIN ---
+    const ADMIN_PASSWORD = "h9ZDIMnPYpGum8"; // 🔑 UBAH PASSWORD KAMU DI SINI!
     const N8N_WEBHOOK_URL = 'https://n8n.afifrzn.my.id/webhook/broadcast-ctf';
 
-    // --- MANAJEMEN STATE (LOCAL STORAGE) ---
-    // Inisiasi data default jika kosong
+    // --- LOGIC AUTHENTICATION ---
+    const loginOverlay = document.getElementById('loginOverlay');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+
+    // Cek Session saat Halaman Ditinggal/Load
+    function checkAuth() {
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            loginOverlay.style.display = 'none';
+        } else {
+            loginOverlay.style.display = 'flex';
+        }
+    }
+
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const inputPass = document.getElementById('loginPassword').value;
+
+        if (inputPass === ADMIN_PASSWORD) {
+            sessionStorage.setItem('isLoggedIn', 'true');
+            loginError.style.display = 'none';
+            loginOverlay.style.display = 'none';
+            document.getElementById('loginPassword').value = '';
+        } else {
+            loginError.style.display = 'block';
+        }
+    });
+
+    window.logout = () => {
+        sessionStorage.removeItem('isLoggedIn');
+        checkAuth();
+    };
+
+    // --- MANAJEMEN LOCALSTORAGE (CHANNELS & ROLES) ---
     let channels = JSON.parse(localStorage.getItem('savedChannels')) || [
         { id: '1530601520075243681', name: '# testing-web' }
     ];
@@ -268,14 +375,12 @@
         renderUI();
     }
 
-    // --- RENDER UI ---
     function renderUI() {
         const channelSelect = document.getElementById('channelSelect');
         const roleSelect = document.getElementById('roleSelect');
         const channelList = document.getElementById('channelList');
         const roleList = document.getElementById('roleList');
 
-        // Render Select Dropdowns
         channelSelect.innerHTML = channels.length ? '' : '<option value="">-- Belum ada channel --</option>';
         channels.forEach(ch => {
             channelSelect.innerHTML += `<option value="${ch.id}">${ch.name}</option>`;
@@ -286,7 +391,6 @@
             roleSelect.innerHTML += `<option value="${rl.id}">${rl.name}</option>`;
         });
 
-        // Render Manage Lists (Kanan)
         channelList.innerHTML = '';
         channels.forEach((ch, index) => {
             channelList.innerHTML += `
@@ -306,11 +410,9 @@
         });
     }
 
-    // --- FUNGSI HAPUS ---
     window.deleteChannel = (index) => { channels.splice(index, 1); saveData(); };
     window.deleteRole = (index) => { roles.splice(index, 1); saveData(); };
 
-    // --- EVENT LISTENERS UNTUK FORM KANAN (TAMBAH DATA) ---
     document.getElementById('addChannelForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const name = document.getElementById('newChannelName').value;
@@ -329,7 +431,7 @@
         e.target.reset();
     });
 
-    // --- EVENT LISTENER UNTUK BROADCAST (N8N) ---
+    // --- FORM BROADCAST DISCORD VIA N8N ---
     document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -349,7 +451,7 @@
         };
 
         if(!payload.channel_id) {
-            statusMessage.textContent = '❌ Error: Channel target belum dipilih/dibuat.';
+            statusMessage.textContent = '❌ Error: Channel target belum dipilih.';
             statusMessage.classList.add('error');
             submitBtn.disabled = false;
             submitBtn.textContent = '🚀 Kirim Broadcast Sekarang';
@@ -368,7 +470,7 @@
                 statusMessage.classList.add('success');
                 e.target.reset();
             } else {
-                throw new Error('Server merespon error');
+                throw new Error('Gagal mengirim');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -377,13 +479,12 @@
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = '🚀 Kirim Broadcast Sekarang';
-            
-            // Hilangkan notifikasi setelah 5 detik
             setTimeout(() => { statusMessage.className = 'status'; }, 5000);
         }
     });
 
-    // Jalankan render saat halaman pertama kali dimuat
+    // Inisialisasi
+    checkAuth();
     renderUI();
 </script>
 
