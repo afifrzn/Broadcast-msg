@@ -1,37 +1,24 @@
-name: Deploy CTF Dashboard to GitHub Pages
+name: Deploy CTF Dashboard to VM
 
 on:
   push:
     branches:
       - main # Ubah ke 'master' jika branch utamamu bernama master
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: 'pages'
-  cancel-in-progress: true
-
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    name: Deploy to VPS / VM
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload Artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to VM via SSH (rsync)
+        uses: easingthemes/ssh-deploy@main
         with:
-          path: '.' # Mempublikasikan seluruh file di root (termasuk index.html)
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          SSH_PRIVATE_KEY: ${{ secrets.VM_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.VM_HOST }}
+          REMOTE_USER: ${{ secrets.VM_USERNAME }}
+          TARGET: ${{ secrets.VM_TARGET_DIR }}
+          EXCLUDE: "/.git/, /.github/"
