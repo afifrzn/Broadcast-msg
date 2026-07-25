@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CTF Broadcast Dashboard</title>
+    <title>CTF Broadcast Pro Dashboard</title>
     <style>
         * {
             box-sizing: border-box;
@@ -15,65 +15,78 @@
         body {
             background-color: #0f172a;
             color: #f8fafc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 550px;
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-            border: 1px solid #334155;
+            padding: 40px 20px;
         }
 
         .header {
-            margin-bottom: 24px;
             text-align: center;
+            margin-bottom: 40px;
         }
 
         .header h1 {
-            font-size: 1.5rem;
+            font-size: 2rem;
             color: #38bdf8;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .header p {
-            font-size: 0.875rem;
             color: #94a3b8;
-            margin-top: 4px;
+            margin-top: 8px;
         }
 
-        .form-group {
-            margin-bottom: 18px;
+        /* Layout Grid Utama */
+        .dashboard-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 30px;
         }
+
+        /* Styling Card */
+        .card {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+            color: #e2e8f0;
+        }
+
+        /* Form Elements */
+        .form-group { margin-bottom: 18px; }
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px;}
+        .form-row > div { flex: 1; }
 
         label {
             display: block;
             font-size: 0.875rem;
             font-weight: 600;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             color: #cbd5e1;
         }
 
         input, textarea, select {
             width: 100%;
-            padding: 10px 14px;
+            padding: 12px 14px;
             background-color: #0f172a;
             border: 1px solid #334155;
-            border-radius: 6px;
+            border-radius: 8px;
             color: #f8fafc;
             font-size: 0.95rem;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
         }
 
         input:focus, textarea:focus, select:focus {
@@ -81,157 +94,297 @@
             box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
         }
 
-        textarea {
-            resize: vertical;
-            min-height: 90px;
-        }
+        textarea { resize: vertical; min-height: 100px; }
 
+        /* Buttons */
         button {
             width: 100%;
             padding: 12px;
-            background-color: #0284c7;
-            color: white;
             font-size: 1rem;
             font-weight: 600;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #0284c7;
+            color: white;
             margin-top: 10px;
         }
+        .btn-primary:hover { background-color: #0369a1; }
+        .btn-primary:disabled { background-color: #475569; cursor: not-allowed; }
 
-        button:hover {
-            background-color: #0369a1;
+        .btn-secondary {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-secondary:hover { background-color: #059669; }
+
+        /* Data Lists */
+        .data-list {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
-        button:disabled {
-            background-color: #475569;
-            cursor: not-allowed;
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f172a;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            font-size: 0.875rem;
         }
 
+        .data-item span { color: #94a3b8; font-family: monospace; font-size: 0.8rem; margin-left: 10px; }
+        
+        .btn-delete {
+            background: none;
+            color: #ef4444;
+            border: none;
+            width: auto;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .btn-delete:hover { text-decoration: underline; background: none; }
+
+        /* Status Messages */
         .status {
             margin-top: 15px;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.875rem;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
             text-align: center;
             display: none;
+            font-weight: 500;
         }
+        .status.success { display: block; background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .status.error { display: block; background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
 
-        .status.success {
-            display: block;
-            background-color: rgba(34, 197, 94, 0.15);
-            color: #4ade80;
-            border: 1px solid rgba(34, 197, 94, 0.3);
-        }
-
-        .status.error {
-            display: block;
-            background-color: rgba(239, 68, 68, 0.15);
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.3);
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; gap: 0;}
         }
     </style>
 </head>
 <body>
 
-<div class="container">
     <div class="header">
-        <h1>🚩 Broadcast Challenge CTF</h1>
-        <p>Kirim notifikasi challenge baru ke Discord via n8n</p>
+        <h1>🚩 CTF Broadcast Center</h1>
+        <p>Kirim notifikasi challenge baru ke Discord dengan mudah</p>
     </div>
 
-    <form id="broadcastForm">
-        <div class="form-group">
-            <label for="title">Judul Challenge / CTF</label>
-            <input type="text" id="title" placeholder="Contoh: PicoCTF 2026 - Web Exploitation" required>
+    <div class="dashboard-container">
+        <!-- Panel Kiri: Form Broadcast -->
+        <div class="card">
+            <h2>📢 Kirim Pengumuman</h2>
+            <form id="broadcastForm">
+                <div class="form-group">
+                    <label>Judul Challenge / CTF</label>
+                    <input type="text" id="title" placeholder="Contoh: PicoCTF 2026 - Web Exploitation" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Deskripsi Challenge</label>
+                    <textarea id="description" placeholder="Jelaskan detail singkat challenge..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>URL / Link Challenge</label>
+                    <input type="url" id="link" placeholder="https://ctf.example.com/challenges/1" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Target Channel Discord</label>
+                    <select id="channelSelect" required>
+                        <!-- Akan diisi otomatis oleh JavaScript -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Role yang Di-tag</label>
+                    <select id="roleSelect">
+                        <!-- Akan diisi otomatis oleh JavaScript -->
+                    </select>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-primary">🚀 Kirim Broadcast Sekarang</button>
+            </form>
+            <div id="statusMessage" class="status"></div>
         </div>
 
-        <div class="form-group">
-            <label for="description">Deskripsi Challenge</label>
-            <textarea id="description" placeholder="Jelaskan detail singkat challenge..." required></textarea>
+        <!-- Panel Kanan: Setting Data -->
+        <div class="card">
+            <h2>⚙️ Kelola Channel & Role</h2>
+            
+            <!-- Tambah Channel -->
+            <form id="addChannelForm" style="margin-bottom: 30px;">
+                <label>Tambah Channel Baru</label>
+                <div class="form-row">
+                    <div class="form-group"><input type="text" id="newChannelName" placeholder="Nama (ex: # general)" required></div>
+                    <div class="form-group"><input type="text" id="newChannelId" placeholder="Channel ID" required></div>
+                </div>
+                <button type="submit" class="btn-secondary">➕ Simpan Channel</button>
+                <div class="data-list" id="channelList"></div>
+            </form>
+
+            <hr style="border-color: #334155; margin-bottom: 20px;">
+
+            <!-- Tambah Role -->
+            <form id="addRoleForm">
+                <label>Tambah Role Baru</label>
+                <div class="form-row">
+                    <div class="form-group"><input type="text" id="newRoleName" placeholder="Nama (ex: @CTF Player)" required></div>
+                    <div class="form-group"><input type="text" id="newRoleId" placeholder="Role ID" required></div>
+                </div>
+                <button type="submit" class="btn-secondary">➕ Simpan Role</button>
+                <div class="data-list" id="roleList"></div>
+            </form>
         </div>
-
-        <div class="form-group">
-            <label for="link">URL / Link Challenge</label>
-            <input type="url" id="link" placeholder="https://ctf.example.com/challenges/1" required>
-        </div>
-
-        <div class="form-group">
-            <label for="channelId">Target Channel Discord</label>
-            <select id="channelId" required>
-                <!-- Ganti value dengan ID Channel Discord kamu -->
-                <option value="1530601520075243681"># testing-web</option>
-                <option value="ISI_CHANNEL_ID_LAIN_JIKA_ADA"># general</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="roleId">Role yang Di-tag</label>
-            <select id="roleId">
-                <option value="">-- Tanpa Tag --</option>
-                <!-- Ganti value dengan ID Role Discord yang tadi didapat -->
-                <option value="1399967831642345615">@adminkuma</option>
-                <option value="ISI_ROLE_ID_LAIN">@CTF Player</option>
-            </select>
-        </div>
-
-        <button type="submit" id="submitBtn">🚀 Send Broadcast</button>
-    </form>
-
-    <div id="statusMessage" class="status"></div>
-</div>
+    </div>
 
 <script>
-    // ⚠️ Ganti dengan Webhook URL dari n8n kamu!
     const N8N_WEBHOOK_URL = 'https://n8n.afifrzn.my.id/webhook/broadcast-ctf';
 
-    const form = document.getElementById('broadcastForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const statusMessage = document.getElementById('statusMessage');
+    // --- MANAJEMEN STATE (LOCAL STORAGE) ---
+    // Inisiasi data default jika kosong
+    let channels = JSON.parse(localStorage.getItem('savedChannels')) || [
+        { id: '1530601520075243681', name: '# testing-web' }
+    ];
+    let roles = JSON.parse(localStorage.getItem('savedRoles')) || [
+        { id: '1399967831642345615', name: '@adminkuma' }
+    ];
 
-    form.addEventListener('submit', async (e) => {
+    function saveData() {
+        localStorage.setItem('savedChannels', JSON.stringify(channels));
+        localStorage.setItem('savedRoles', JSON.stringify(roles));
+        renderUI();
+    }
+
+    // --- RENDER UI ---
+    function renderUI() {
+        const channelSelect = document.getElementById('channelSelect');
+        const roleSelect = document.getElementById('roleSelect');
+        const channelList = document.getElementById('channelList');
+        const roleList = document.getElementById('roleList');
+
+        // Render Select Dropdowns
+        channelSelect.innerHTML = channels.length ? '' : '<option value="">-- Belum ada channel --</option>';
+        channels.forEach(ch => {
+            channelSelect.innerHTML += `<option value="${ch.id}">${ch.name}</option>`;
+        });
+
+        roleSelect.innerHTML = '<option value="">-- Tanpa Tag --</option>';
+        roles.forEach(rl => {
+            roleSelect.innerHTML += `<option value="${rl.id}">${rl.name}</option>`;
+        });
+
+        // Render Manage Lists (Kanan)
+        channelList.innerHTML = '';
+        channels.forEach((ch, index) => {
+            channelList.innerHTML += `
+                <div class="data-item">
+                    <div><b>${ch.name}</b> <span>(${ch.id})</span></div>
+                    <button type="button" class="btn-delete" onclick="deleteChannel(${index})">Hapus</button>
+                </div>`;
+        });
+
+        roleList.innerHTML = '';
+        roles.forEach((rl, index) => {
+            roleList.innerHTML += `
+                <div class="data-item">
+                    <div><b>${rl.name}</b> <span>(${rl.id})</span></div>
+                    <button type="button" class="btn-delete" onclick="deleteRole(${index})">Hapus</button>
+                </div>`;
+        });
+    }
+
+    // --- FUNGSI HAPUS ---
+    window.deleteChannel = (index) => { channels.splice(index, 1); saveData(); };
+    window.deleteRole = (index) => { roles.splice(index, 1); saveData(); };
+
+    // --- EVENT LISTENERS UNTUK FORM KANAN (TAMBAH DATA) ---
+    document.getElementById('addChannelForm').addEventListener('submit', (e) => {
         e.preventDefault();
+        const name = document.getElementById('newChannelName').value;
+        const id = document.getElementById('newChannelId').value;
+        channels.push({ name, id });
+        saveData();
+        e.target.reset();
+    });
 
-        // Indikator Loading
+    document.getElementById('addRoleForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('newRoleName').value;
+        const id = document.getElementById('newRoleId').value;
+        roles.push({ name, id });
+        saveData();
+        e.target.reset();
+    });
+
+    // --- EVENT LISTENER UNTUK BROADCAST (N8N) ---
+    document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Mengirim...';
+        submitBtn.textContent = '⏳ Mengirim Broadcast...';
         statusMessage.className = 'status';
-        statusMessage.style.display = 'none';
 
         const payload = {
             title: document.getElementById('title').value,
             description: document.getElementById('description').value,
             link: document.getElementById('link').value,
-            channel_id: document.getElementById('channelId').value,
-            role_id: document.getElementById('roleId').value
+            channel_id: document.getElementById('channelSelect').value,
+            role_id: document.getElementById('roleSelect').value
         };
+
+        if(!payload.channel_id) {
+            statusMessage.textContent = '❌ Error: Channel target belum dipilih/dibuat.';
+            statusMessage.classList.add('error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🚀 Kirim Broadcast Sekarang';
+            return;
+        }
 
         try {
             const response = await fetch(N8N_WEBHOOK_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
             if (response.ok) {
-                statusMessage.textContent = '✅ Broadcast berhasil terkirim ke Discord!';
+                statusMessage.textContent = '✅ Broadcast berhasil mengudara di Discord!';
                 statusMessage.classList.add('success');
-                form.reset();
+                e.target.reset();
             } else {
-                throw new Error('Gagal mengirim ke n8n');
+                throw new Error('Server merespon error');
             }
         } catch (error) {
             console.error('Error:', error);
-            statusMessage.textContent = '❌ Terjadi kesalahan saat mengirim broadcast.';
+            statusMessage.textContent = '❌ Terjadi kesalahan koneksi ke n8n.';
             statusMessage.classList.add('error');
         } finally {
             submitBtn.disabled = false;
-            submitBtn.textContent = '🚀 Send Broadcast';
+            submitBtn.textContent = '🚀 Kirim Broadcast Sekarang';
+            
+            // Hilangkan notifikasi setelah 5 detik
+            setTimeout(() => { statusMessage.className = 'status'; }, 5000);
         }
     });
+
+    // Jalankan render saat halaman pertama kali dimuat
+    renderUI();
 </script>
 
 </body>
